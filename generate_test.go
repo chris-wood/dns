@@ -205,13 +205,11 @@ $GENERATE 32-158 dhcp-${-32,4,d} A 10.0.0.$
 	}
 }
 
-
-
 func TestCrasherString(t *testing.T) {
-	tests := []struct{
-	in  string
-	err string
-}{
+	tests := []struct {
+		in  string
+		err string
+	}{
 		{"$GENERATE 0-300103\"$$GENERATE 2-2", "dns: garbage after $GENERATE range: \"\\\"\" at line: 1:19"},
 		{"$GENERATE 0-5414137360", "dns: garbage after $GENERATE range: \"\\n\" at line: 1:22"},
 		{"$GENERATE       11522-3668518066406258", "dns: garbage after $GENERATE range: \"\\n\" at line: 1:38"},

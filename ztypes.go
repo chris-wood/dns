@@ -79,6 +79,8 @@ var TypeToRR = map[uint16]func() RR{
 	TypeUINFO:      func() RR { return new(UINFO) },
 	TypeURI:        func() RR { return new(URI) },
 	TypeX25:        func() RR { return new(X25) },
+	TypeSVCB:       func() RR { return new(SVCB) },
+	TypeHTTPSVCB:   func() RR { return new(HTTPSVCB) },
 }
 
 // TypeToString is a map of strings for each RR type.
@@ -163,6 +165,8 @@ var TypeToString = map[uint16]string{
 	TypeURI:        "URI",
 	TypeX25:        "X25",
 	TypeNSAPPTR:    "NSAP-PTR",
+	TypeSVCB:       "SVCB",
+	TypeHTTPSVCB:   "HTTPSVCB",
 }
 
 func (rr *A) Header() *RR_Header          { return &rr.Hdr }
@@ -236,6 +240,8 @@ func (rr *UID) Header() *RR_Header        { return &rr.Hdr }
 func (rr *UINFO) Header() *RR_Header      { return &rr.Hdr }
 func (rr *URI) Header() *RR_Header        { return &rr.Hdr }
 func (rr *X25) Header() *RR_Header        { return &rr.Hdr }
+func (rr *SVCB) Header() *RR_Header       { return &rr.Hdr }
+func (rr *HTTPSVCB) Header() *RR_Header   { return &rr.Hdr }
 
 // len() functions
 func (rr *A) len(off int, compression map[string]struct{}) int {
@@ -659,6 +665,32 @@ func (rr *X25) len(off int, compression map[string]struct{}) int {
 	l += len(rr.PSDNAddress) + 1
 	return l
 }
+func (rr *SVCB) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
+	l += 2 // SvcFieldPriority
+	l += domainNameLen(rr.SvcDomainName, off+l, compression, false)
+	// l += len(rr.SvcFieldValue)
+	for k, v := range rr.SvcFieldValue {
+		l += len(k) + 1 + len(v)
+	}
+	if len(rr.SvcFieldValue) > 0 {
+		l += len(rr.SvcFieldValue) - 1
+	}
+	return l
+}
+func (rr *HTTPSVCB) len(off int, compression map[string]struct{}) int {
+	l := rr.Hdr.len(off, compression)
+	l += 2 // SvcFieldPriority
+	l += domainNameLen(rr.SvcDomainName, off+l, compression, false)
+	// l += len(rr.SvcFieldValue)
+	for k, v := range rr.SvcFieldValue {
+		l += len(k) + 1 + len(v)
+	}
+	if len(rr.SvcFieldValue) > 0 {
+		l += len(rr.SvcFieldValue) - 1
+	}
+	return l
+}
 
 // copy() functions
 func (rr *A) copy() RR {
@@ -878,4 +910,18 @@ func (rr *URI) copy() RR {
 }
 func (rr *X25) copy() RR {
 	return &X25{rr.Hdr, rr.PSDNAddress}
+}
+func (rr *SVCB) copy() RR {
+	copiedSvcFieldValue := make(map[string]string)
+	for k, v := range rr.SvcFieldValue {
+		copiedSvcFieldValue[k] = v
+	}
+	return &SVCB{rr.Hdr, rr.SvcFieldPriority, rr.SvcDomainName, copiedSvcFieldValue}
+}
+func (rr *HTTPSVCB) copy() RR {
+	copiedSvcFieldValue := make(map[string]string)
+	for k, v := range rr.SvcFieldValue {
+		copiedSvcFieldValue[k] = v
+	}
+	return &HTTPSVCB{rr.Hdr, rr.SvcFieldPriority, rr.SvcDomainName, copiedSvcFieldValue}
 }

@@ -1696,3 +1696,43 @@ func (rr *TKEY) parse(c *zlexer, o string) *ParseError {
 
 	return nil
 }
+
+func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	priority, err := strconv.ParseUint(l.token, 10, 16)
+	if err != nil || l.err {
+		return &ParseError{"", "bad SvcFieldPriority", l}
+	}
+	rr.SvcFieldPriority = uint16(priority)
+
+	l, _ = c.Next()
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
+		return &ParseError{"", "bad SvcDomainName", l}
+	}
+	rr.SvcDomainName = name
+
+	// TODO(caw): parse the rest
+
+	return slurpRemainder(c)
+}
+
+func (rr *HTTPSVCB) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	priority, err := strconv.ParseUint(l.token, 10, 16)
+	if err != nil || l.err {
+		return &ParseError{"", "bad SvcFieldPriority", l}
+	}
+	rr.SvcFieldPriority = uint16(priority)
+
+	l, _ = c.Next()
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
+		return &ParseError{"", "bad SvcDomainName", l}
+	}
+	rr.SvcDomainName = name
+
+	// TODO(caw): parse the rest
+
+	return slurpRemainder(c)
+}

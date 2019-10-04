@@ -94,6 +94,9 @@ const (
 	TypeCAA        uint16 = 257
 	TypeAVC        uint16 = 258
 
+	TypeSVCB     uint16 = 64
+	TypeHTTPSVCB uint16 = 65
+
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
 
@@ -1351,6 +1354,42 @@ func (rr *CSYNC) len(off int, compression map[string]struct{}) int {
 	l += 4 + 2
 	l += typeBitMapLen(rr.TypeBitMap)
 	return l
+}
+
+// SVCB RR. See https://tools.ietf.org/html/draft-nygren-dnsop-svcb-httpssvc-00
+type SVCB struct {
+	Hdr              RR_Header
+	SvcFieldPriority uint16
+	SvcDomainName    string `dns:"cdomain-name"` // "cdomain-name" specifies encoding (and may be compressed)
+	SvcFieldValue    map[string]string
+}
+
+func (rr *SVCB) String() string {
+	// if rr.AAAA == nil {
+	// 	return rr.Hdr.String()
+	// }
+	// return rr.Hdr.String() + rr.AAAA.String()
+
+	// TODO(caw): writeme
+	return rr.Hdr.String()
+}
+
+// HTTPSVCB RR. See https://tools.ietf.org/html/draft-nygren-dnsop-svcb-httpssvc-00
+type HTTPSVCB struct {
+	Hdr              RR_Header
+	SvcFieldPriority uint16
+	SvcDomainName    string `dns:"cdomain-name"` // "cdomain-name" specifies encoding (and may be compressed)
+	SvcFieldValue    map[string]string
+}
+
+func (rr *HTTPSVCB) String() string {
+	// if rr.AAAA == nil {
+	// 	return rr.Hdr.String()
+	// }
+	// return rr.Hdr.String() + rr.AAAA.String()
+
+	// TODO(caw): writeme
+	return rr.Hdr.String()
 }
 
 // TimeToString translates the RRSIG's incep. and expir. times to the

@@ -2,6 +2,11 @@
 
 package dns
 
+import (
+	"fmt"
+	"strings"
+)
+
 // pack*() functions
 
 func (rr *A) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
@@ -1072,6 +1077,59 @@ func (rr *URI) pack(msg []byte, off int, compression compressionMap, compress bo
 
 func (rr *X25) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
 	off, err = packString(rr.PSDNAddress, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func packKeyValueStrings(msg []byte, off int, kvpairs map[string]string) (int, error) {
+	var err error
+	index := 0
+	count := len(kvpairs)
+	mergedString := ""
+	for k, v := range kvpairs {
+		mergedString = k + "=" + v
+		index += 1
+		if index < count {
+			mergedString = mergedString + " "
+		}
+	}
+
+	off, err = packStringAny(mergedString, msg, off)
+	if err != nil {
+		return off, err
+	}
+
+	return off, nil
+}
+
+func (rr *SVCB) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	off, err = packUint16(rr.SvcFieldPriority, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packDomainName(rr.SvcDomainName, msg, off, compression, false)
+	if err != nil {
+		return off, err
+	}
+	off, err = packKeyValueStrings(msg, off, rr.SvcFieldValue)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *HTTPSVCB) pack(msg []byte, off int, compression compressionMap, compress bool) (off1 int, err error) {
+	off, err = packUint16(rr.SvcFieldPriority, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packDomainName(rr.SvcDomainName, msg, off, compression, false)
+	if err != nil {
+		return off, err
+	}
+	off, err = packKeyValueStrings(msg, off, rr.SvcFieldValue)
 	if err != nil {
 		return off, err
 	}
@@ -2718,5 +2776,67 @@ func (rr *X25) unpack(msg []byte, off int) (off1 int, err error) {
 	if err != nil {
 		return off, err
 	}
+	return off, nil
+}
+
+func (rr *SVCB) unpack(msg []byte, off int) (off1 int, err error) {
+	rr.SvcFieldPriority, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return off, err
+	}
+	if off == len(msg) {
+		return off, nil
+	}
+
+	rr.SvcDomainName, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return off, err
+	}
+
+	keyvalues, off, err := unpackStringAny(msg, off, len(msg)-off)
+	if err != nil {
+		return off, err
+	}
+
+	rr.SvcFieldValue = make(map[string]string)
+	for _, v := range strings.Split(keyvalues, " ") {
+		pairs := strings.Split(v, "=")
+		if len(pairs) != 2 {
+			return off, fmt.Errorf("Invalid key-value pair")
+		}
+		rr.SvcFieldValue[pairs[0]] = pairs[1]
+	}
+
+	return off, nil
+}
+
+func (rr *HTTPSVCB) unpack(msg []byte, off int) (off1 int, err error) {
+	rr.SvcFieldPriority, off, err = unpackUint16(msg, off)
+	if err != nil {
+		return off, err
+	}
+	if off == len(msg) {
+		return off, nil
+	}
+
+	rr.SvcDomainName, off, err = UnpackDomainName(msg, off)
+	if err != nil {
+		return off, err
+	}
+
+	keyvalues, off, err := unpackStringAny(msg, off, len(msg)-off)
+	if err != nil {
+		return off, err
+	}
+
+	rr.SvcFieldValue = make(map[string]string)
+	for _, v := range strings.Split(keyvalues, " ") {
+		pairs := strings.Split(v, "=")
+		if len(pairs) != 2 {
+			return off, fmt.Errorf("Invalid key-value pair")
+		}
+		rr.SvcFieldValue[pairs[0]] = pairs[1]
+	}
+
 	return off, nil
 }

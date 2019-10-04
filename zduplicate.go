@@ -1138,3 +1138,57 @@ func (r1 *X25) isDuplicate(_r2 RR) bool {
 	}
 	return true
 }
+
+func (r1 *SVCB) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*SVCB)
+	if !ok {
+		return false
+	}
+	_ = r2
+	if r1.SvcFieldPriority != r2.SvcFieldPriority {
+		return false
+	}
+	if !isDuplicateName(r1.SvcDomainName, r2.SvcDomainName) {
+		return false
+	}
+	if len(r1.SvcFieldValue) != len(r2.SvcFieldValue) {
+		return false
+	}
+	for k, v1 := range r1.SvcFieldValue {
+		v2, ok := r2.SvcFieldValue[k]
+		if !ok {
+			return false
+		}
+		if v1 != v2 {
+			return false
+		}
+	}
+	return true
+}
+
+func (r1 *HTTPSVCB) isDuplicate(_r2 RR) bool {
+	r2, ok := _r2.(*HTTPSVCB)
+	if !ok {
+		return false
+	}
+	_ = r2
+	if r1.SvcFieldPriority != r2.SvcFieldPriority {
+		return false
+	}
+	if !isDuplicateName(r1.SvcDomainName, r2.SvcDomainName) {
+		return false
+	}
+	if len(r1.SvcFieldValue) != len(r2.SvcFieldValue) {
+		return false
+	}
+	for k, v1 := range r1.SvcFieldValue {
+		v2, ok := r2.SvcFieldValue[k]
+		if !ok {
+			return false
+		}
+		if v1 != v2 {
+			return false
+		}
+	}
+	return true
+}
